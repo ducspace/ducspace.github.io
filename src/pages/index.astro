@@ -1,0 +1,34 @@
+---
+import Base from '../layouts/Base.astro';
+
+const today = new Date();
+const updated = today.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+---
+<Base title="Ducspace — readme" activeNav="readme">
+  <div class="page-header">
+    <h1 class="page-title">readme</h1>
+    <span class="page-meta">updated {updated}</span>
+  </div>
+
+  <div class="readme-body">
+    <p>Chào mừng bạn ghé qua.</p>
+
+    <p>Tôi tên là Đức. Còn đây là nơi tập kết của đủ thứ linh tinh.</p>
+
+    <p>Một ý tưởng nảy ra lúc nửa đêm. Một bài học rút ra sau công việc. Một công cụ AI mới phát hiện. Một quyển sách đọc được nửa chừng. Mấy tấm ảnh tôi mới chụp. Và rất nhiều thứ mà vài tuần sau chính tôi cũng quên mất là mình từng nghĩ tới.</p>
+
+    <p>Thay vì để chúng trôi đi, tôi gom lại hết vào đây.</p>
+
+    <p>Thấy gì đáng lưu thì lưu. Nghĩ gì đáng viết thì viết.</p>
+
+    <p>Không theo chủ đề nào cụ thể. Cũng không có kế hoạch nội dung bài bản. Nói thật là nếu có thì chắc tôi đã không duy trì nổi.</p>
+
+    <p>Có thể chẳng có gì hợp gu bạn cả. Cũng có thể bạn bắt gặp thứ gì đó gật gù được.</p>
+
+    <p>Nếu vậy thì tuyệt.</p>
+
+    <p>Nếu thấy hứng thú, cứ mở đại một ghi chú nào đó xem sao.</p>
+
+    <p>Và nếu bạn có một góc nhìn khác, một câu chuyện hay, hoặc đơn giản là muốn chém gió vài câu, tôi luôn rất vui được nghe.</p>
+  </div>
+</Base>

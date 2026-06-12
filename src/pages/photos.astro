@@ -1,0 +1,141 @@
+---
+import Base from '../layouts/Base.astro';
+
+// Sample photos data — replace with real photos later
+const photos = [
+  { src: '/photos/placeholder.svg', caption: 'Hà Nội, 6 giờ sáng. Lúc này thành phố còn sống được.', date: '2026-01-15', alt: 'Hà Nội sáng sớm' },
+  { src: '/photos/placeholder.svg', caption: 'Sáng thứ Hai. Cà phê nguội hết rồi mà vẫn chưa mở máy.', date: '2026-03-04', alt: 'Cà phê buổi sáng' },
+  { src: '/photos/placeholder.svg', caption: 'Một chiều mưa ở Hà Nội. Ngồi trong quán nhìn ra đường.', date: '2026-04-20', alt: 'Hà Nội mưa' },
+  { src: '/photos/placeholder.svg', caption: 'Góc làm việc quen thuộc. Đôi khi cũng cần thay đổi.', date: '2026-05-10', alt: 'Góc làm việc' },
+];
+
+// Group by year
+const byYear: Record<number, typeof photos> = {};
+photos.forEach(p => {
+  const y = new Date(p.date).getFullYear();
+  if (!byYear[y]) byYear[y] = [];
+  byYear[y].push(p);
+});
+const years = Object.keys(byYear).map(Number).sort((a,b) => b - a);
+
+function formatLightboxDate(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' });
+}
+---
+<Base title="Ducspace — photos" activeNav="photos">
+  <div class="page-header">
+    <h1 class="page-title">photos</h1>
+  </div>
+  <p class="page-subtitle">Những khoảnh khắc. Không có chú thích thừa.</p>
+
+  {years.map((year, yi) => (
+    <div class="photo-year-section" data-year={year}>
+      <div class="photo-year-header" data-year-toggle={year}>
+        <span class="photo-year-label">{year}</span>
+        <span class="photo-year-count">· {byYear[year].length} ảnh</span>
+        <div class="photo-year-line"></div>
+        <span class={`photo-year-chevron ${yi === 0 ? 'open' : ''}`}>›</span>
+      </div>
+      <div class={`photo-grid ${yi === 0 ? 'open' : ''}`} data-year-grid={year}>
+        {byYear[year].map((photo, pi) => (
+          <div class="photo-thumb"
+               data-index={photos.indexOf(photo)}
+               data-year={year}
+               data-caption={photo.caption}
+               data-date={formatLightboxDate(photo.date)}
+               data-src={photo.src}>
+            <img src={photo.src} alt={photo.alt} loading="lazy" />
+            <div class="photo-thumb-overlay">
+              <span class="photo-thumb-caption-preview">{photo.caption}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  ))}
+
+  <!-- Lightbox -->
+  <div class="lightbox" id="lightbox">
+    <div class="lightbox-container">
+      <button class="lightbox-close" id="lightboxClose">×</button>
+      <img src="" alt="" id="lightboxImg" />
+    </div>
+    <div class="lightbox-info">
+      <div class="lightbox-caption" id="lightboxCaption"></div>
+      <div class="lightbox-date" id="lightboxDate"></div>
+      <div class="lightbox-dots" id="lightboxDots"></div>
+    </div>
+  </div>
+</Base>
+
+<script>
+  // Year toggle
+  document.querySelectorAll('[data-year-toggle]').forEach(header => {
+    header.addEventListener('click', () => {
+      const year = (header as HTMLElement).dataset.yearToggle;
+      const grid = document.querySelector(`[data-year-grid="${year}"]`);
+      const chevron = header.querySelector('.photo-year-chevron');
+      grid?.classList.toggle('open');
+      chevron?.classList.toggle('open');
+    });
+  });
+
+  // Lightbox
+  const lightbox   = document.getElementById('lightbox')!;
+  const lbImg      = document.getElementById('lightboxImg') as HTMLImageElement;
+  const lbCaption  = document.getElementById('lightboxCaption')!;
+  const lbDate     = document.getElementById('lightboxDate')!;
+  const lbDots     = document.getElementById('lightboxDots')!;
+  const lbClose    = document.getElementById('lightboxClose')!;
+
+  let allPhotos: { src: string; caption: string; date: string }[] = [];
+  let currentIdx = 0;
+
+  function buildDots(total: number, active: number) {
+    lbDots.innerHTML = '';
+    for (let i = 0; i < total; i++) {
+      const dot = document.createElement('button');
+      dot.className = `lightbox-dot${i === active ? ' active' : ''}`;
+      dot.addEventListener('click', () => showPhoto(i));
+      lbDots.appendChild(dot);
+    }
+  }
+
+  function showPhoto(idx: number) {
+    currentIdx = idx;
+    const p = allPhotos[idx];
+    lbImg.src = p.src;
+    lbCaption.textContent = p.caption;
+    lbDate.textContent = p.date;
+    buildDots(allPhotos.length, idx);
+  }
+
+  document.querySelectorAll('.photo-thumb').forEach(thumb => {
+    thumb.addEventListener('click', () => {
+      const el = thumb as HTMLElement;
+      // Collect all photos from the same year group
+      const year = el.dataset.year;
+      const yearThumbs = Array.from(document.querySelectorAll(`.photo-thumb[data-year="${year}"]`));
+      allPhotos = yearThumbs.map(t => ({
+        src: (t as HTMLElement).dataset.src!,
+        caption: (t as HTMLElement).dataset.caption!,
+        date: (t as HTMLElement).dataset.date!,
+      }));
+      const idx = yearThumbs.indexOf(thumb);
+      showPhoto(idx);
+      lightbox.classList.add('show');
+    });
+  });
+
+  lbClose.addEventListener('click', () => lightbox.classList.remove('show'));
+  lightbox.addEventListener('click', (e) => {
+    if (e.target === lightbox) lightbox.classList.remove('show');
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (!lightbox.classList.contains('show')) return;
+    if (e.key === 'Escape') lightbox.classList.remove('show');
+    if (e.key === 'ArrowRight') showPhoto((currentIdx + 1) % allPhotos.length);
+    if (e.key === 'ArrowLeft')  showPhoto((currentIdx - 1 + allPhotos.length) % allPhotos.length);
+  });
+</script>

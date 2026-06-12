@@ -1,0 +1,98 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+import { render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const notes = await getCollection('notes');
+  return notes.map(note => ({
+    params: { slug: note.id },
+    props: { note },
+  }));
+}
+
+const { note } = Astro.props;
+const { Content } = await render(note);
+
+const workTags = ['aftersales', 'system thinking', 'ai', 'automotive', 'management'];
+
+function formatDate(d: Date) {
+  return d.toLocaleDateString('vi-VN', { day: '2-digit', month: 'long', year: 'numeric' });
+}
+
+const CUSDIS_APP_ID = '5aa70ab7-af56-44e2-a7cf-20e6695c55d4';
+const slug = note.id;
+---
+<Base title={`${note.data.title} — Ducspace`} activeNav="notes">
+  <a href="/notes" class="article-back">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+    notes
+  </a>
+
+  <div class="article-header">
+    <h1 class="article-title">{note.data.title}</h1>
+    <div class="article-meta">
+      <span>{formatDate(note.data.date)}</span>
+      <span>·</span>
+      <span>{note.data.type}</span>
+      {note.data.tags?.map(t => (
+        <span class={`note-tag ${workTags.includes(t) ? 'work' : 'personal'}`}>{t}</span>
+      ))}
+    </div>
+  </div>
+
+  <div class="article-body">
+    <Content />
+  </div>
+
+  <!-- Comment Section -->
+  <div class="comment-section">
+    <button class="comment-trigger" id="commentTrigger">
+      Để lại suy nghĩ<span class="comment-cursor-inline"></span>
+    </button>
+    <div class="comment-form-wrapper" id="commentWrapper">
+      <div class="comment-form-inner">
+        <div id="cusdis_thread"
+          data-host="https://cusdis.com"
+          data-app-id={CUSDIS_APP_ID}
+          data-page-id={slug}
+          data-page-url={`https://ducspace.github.io/notes/${slug}`}
+          data-page-title={note.data.title}
+          data-theme="auto"
+        ></div>
+        <p style="margin-top:12px; font-family:'DM Sans',sans-serif; font-size:12px; color:var(--text-muted);">
+          Hoặc <a href={`mailto:Duclc93@gmail.com?subject=Re: ${encodeURIComponent(note.data.title)}`} style="color:var(--accent);">gửi qua email</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</Base>
+
+<script>
+  const trigger = document.getElementById('commentTrigger');
+  const wrapper = document.getElementById('commentWrapper');
+  let loaded = false;
+
+  trigger?.addEventListener('click', () => {
+    const isOpen = wrapper?.classList.contains('open');
+    if (isOpen) {
+      wrapper?.classList.remove('open');
+    } else {
+      wrapper?.classList.add('open');
+      if (!loaded) {
+        loaded = true;
+        const script = document.createElement('script');
+        script.src = 'https://cusdis.com/js/cusdis.es.js';
+        script.async = true;
+        script.defer = true;
+        document.body.appendChild(script);
+      }
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!trigger?.contains(e.target as Node) && !wrapper?.contains(e.target as Node)) {
+      wrapper?.classList.remove('open');
+    }
+  });
+</script>

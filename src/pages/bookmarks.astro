@@ -1,0 +1,93 @@
+---
+import Base from '../layouts/Base.astro';
+import bookmarksData from '../data/bookmarks.json';
+
+const workTags = ['aftersales', 'system thinking', 'ai', 'automotive', 'management'];
+
+// Group by month
+const byMonth: Record<string, { label: string; items: typeof bookmarksData }> = {};
+bookmarksData.forEach(bm => {
+  const d = new Date(bm.date);
+  const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  const label = d.toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' });
+  if (!byMonth[key]) byMonth[key] = { label, items: [] };
+  byMonth[key].items.push(bm);
+});
+const months = Object.keys(byMonth).sort((a, b) => b.localeCompare(a));
+
+// All unique tags for filter
+const allTags = [...new Set(bookmarksData.flatMap(b => b.tags))].sort();
+
+function getDomain(url: string) {
+  try { return new URL(url).hostname.replace('www.', ''); } catch { return ''; }
+}
+---
+<Base title="Ducspace — bookmarks" activeNav="bookmarks">
+  <div class="page-header">
+    <h1 class="page-title">bookmarks</h1>
+  </div>
+  <p class="page-subtitle">Những thứ đáng đọc. Mỗi link kèm một câu tại sao.</p>
+
+  <!-- Filter Tags -->
+  <div class="bm-filters">
+    <button class="bm-filter-tag active" data-tag="all">tất cả</button>
+    {allTags.map(t => (
+      <button class="bm-filter-tag" data-tag={t}>{t}</button>
+    ))}
+  </div>
+
+  <!-- Bookmark List -->
+  {months.map(key => {
+    const group = byMonth[key];
+    const groupTags = [...new Set(group.items.flatMap(b => b.tags))];
+    return (
+      <div class="bm-month-group" data-group-tags={JSON.stringify(groupTags)}>
+        <div class="bm-month-label">{group.label}</div>
+        {group.items.map(bm => (
+          <a href={bm.url} target="_blank" rel="noopener"
+             class="bm-link-row"
+             data-tags={JSON.stringify(bm.tags)}>
+            <span class="bm-link-arrow">→</span>
+            <div class="bm-link-body">
+              <div class="bm-link-title">{bm.title}</div>
+              {bm.note && <div class="bm-link-note">{bm.note}</div>}
+              <div class="bm-link-meta">
+                <span class="bm-link-domain">{getDomain(bm.url)}</span>
+                {bm.readtime && <span class="bm-link-readtime">· {bm.readtime} min</span>}
+                {bm.tags.map(t => (
+                  <span class={`bm-link-tag ${workTags.includes(t) ? 'work' : 'personal'}`}>{t}</span>
+                ))}
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+    );
+  })}
+</Base>
+
+<script>
+  const filterTags  = document.querySelectorAll('.bm-filter-tag');
+  const linkRows    = document.querySelectorAll('.bm-link-row');
+  const monthGroups = document.querySelectorAll('.bm-month-group');
+
+  filterTags.forEach(tag => {
+    tag.addEventListener('click', () => {
+      filterTags.forEach(t => t.classList.remove('active'));
+      tag.classList.add('active');
+      const selected = (tag as HTMLElement).dataset.tag!;
+
+      linkRows.forEach(row => {
+        const rowTags: string[] = JSON.parse((row as HTMLElement).dataset.tags || '[]');
+        (row as HTMLElement).style.display =
+          (selected === 'all' || rowTags.includes(selected)) ? '' : 'none';
+      });
+
+      monthGroups.forEach(group => {
+        const hasVisible = [...group.querySelectorAll('.bm-link-row')]
+          .some(r => (r as HTMLElement).style.display !== 'none');
+        (group as HTMLElement).style.display = hasVisible ? '' : 'none';
+      });
+    });
+  });
+</script>

@@ -1,0 +1,26 @@
+[
+  {
+    "title": "Tại sao CRM thất bại ở dealership — không phải vì phần mềm",
+    "url": "https://hbr.org/2018/04/why-crm-projects-fail-and-how-to-make-them-more-successful",
+    "note": "Không ai cập nhật dữ liệu. Không phải vấn đề công nghệ, là vấn đề văn hóa.",
+    "tags": ["aftersales"],
+    "date": "2026-06-10",
+    "readtime": 8
+  },
+  {
+    "title": "Claude 4 và bước chuyển từ assistant sang agent",
+    "url": "https://www.anthropic.com/news/claude-4",
+    "note": "Bài phân tích hay về việc AI bắt đầu tự lên kế hoạch thay vì chỉ trả lời.",
+    "tags": ["ai"],
+    "date": "2026-06-05",
+    "readtime": 12
+  },
+  {
+    "title": "Systems Thinking: The Essential Primer",
+    "url": "https://fs.blog/systems-thinking/",
+    "note": "Hiểu cách các hệ thống vận hành — áp dụng được cho cả quản lý lẫn cuộc sống.",
+    "tags": ["system thinking"],
+    "date": "2026-05-20",
+    "readtime": 15
+  }
+]

@@ -1,0 +1,47 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+const allNotes = await getCollection('notes');
+const sorted = allNotes.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+const workTags = ['aftersales', 'system thinking', 'ai', 'automotive', 'management'];
+
+function formatDate(d: Date) {
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+---
+<Base title="Ducspace — notes" activeNav="notes">
+  <div class="page-header">
+    <h1 class="page-title">notes</h1>
+  </div>
+
+  {sorted.length === 0 ? (
+    <p class="empty-state">Chưa có bài nào. Viết bài đầu tiên thôi.</p>
+  ) : (
+    <ul class="notes-list">
+      {sorted.map(note => {
+        const tags = note.data.tags ?? [];
+        return (
+          <li>
+            <a href={`/notes/${note.slug}`} class="note-row">
+              <div>
+                <div class="note-title">{note.data.title}</div>
+                {note.data.description && <div class="note-desc">{note.data.description}</div>}
+              </div>
+              <div class="note-tags">
+                {tags.map(t => (
+                  <span class={`note-tag ${workTags.includes(t) ? 'work' : 'personal'}`}>{t}</span>
+                ))}
+              </div>
+              <div class="note-date">
+                {formatDate(note.data.date)}
+                <span class="note-type">{note.data.type}</span>
+              </div>
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+  )}
+</Base>

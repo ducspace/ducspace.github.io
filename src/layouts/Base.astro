@@ -1,0 +1,122 @@
+---
+export interface Props {
+  title?: string;
+  activeNav?: string;
+}
+const { title = 'Ducspace', activeNav = 'readme' } = Astro.props;
+
+import { getCollection } from 'astro:content';
+
+let allTags: string[] = [];
+try {
+  const notes = await getCollection('notes');
+  const tagSet = new Set<string>();
+  notes.forEach(n => n.data.tags?.forEach((t: string) => tagSet.add(t)));
+  allTags = Array.from(tagSet).sort();
+} catch(e) {}
+
+const workTags = ['aftersales', 'system thinking', 'ai', 'automotive', 'management'];
+---
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{title}</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/styles/global.css" />
+</head>
+<body>
+<div class="app-shell">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <!-- Logo -->
+    <a href="/" class="logo" style="text-decoration:none;">
+      <span class="logo-duc">Duc</span>
+      <span class="logo-cursor"></span>
+      <span class="logo-space">space</span>
+    </a>
+
+    <div class="sidebar-divider"></div>
+
+    <!-- Nav -->
+    <nav>
+      <ul class="nav-menu">
+        <li><a href="/"          class={activeNav === 'readme'    ? 'active' : ''}>readme</a></li>
+        <li><a href="/notes"     class={activeNav === 'notes'     ? 'active' : ''}>notes</a></li>
+        <li><a href="/photos"    class={activeNav === 'photos'    ? 'active' : ''}>photos</a></li>
+        <li><a href="/bookmarks" class={activeNav === 'bookmarks' ? 'active' : ''}>bookmarks</a></li>
+      </ul>
+    </nav>
+
+    <div class="sidebar-divider"></div>
+
+    <!-- Tags -->
+    {allTags.length > 0 && (
+      <>
+        <div class="sidebar-label">Tags</div>
+        <ul class="sidebar-tags">
+          {allTags.map(tag => (
+            <li><a href={`/notes?tag=${encodeURIComponent(tag)}`}>#{tag}</a></li>
+          ))}
+        </ul>
+        <div class="sidebar-divider"></div>
+      </>
+    )}
+
+    <!-- Connect -->
+    <div class="sidebar-label">Connect</div>
+    <ul class="connect-links">
+      <li>
+        <a href="mailto:Duclc93@gmail.com">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>
+          email
+        </a>
+      </li>
+      <li>
+        <a href="https://github.com/ducspace" target="_blank" rel="noopener">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+          github
+        </a>
+      </li>
+      <li>
+        <a href="https://fb.com/duclc93" target="_blank" rel="noopener">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+          facebook
+        </a>
+      </li>
+    </ul>
+
+    <!-- Bottom controls -->
+    <div class="sidebar-bottom">
+      <div class="sidebar-divider"></div>
+      <button class="dark-toggle" id="darkToggle" aria-label="Toggle dark mode">
+        <span>dark mode</span>
+        <span class="toggle-pill"></span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- CONTENT -->
+  <main class="content">
+    <slot />
+  </main>
+</div>
+
+<script>
+  // Dark mode
+  const toggle = document.getElementById('darkToggle');
+  const html = document.documentElement;
+
+  const saved = localStorage.getItem('theme');
+  if (saved) html.setAttribute('data-theme', saved);
+
+  toggle?.addEventListener('click', () => {
+    const current = html.getAttribute('data-theme');
+    const next = current === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+  });
+</script>
+</body>
+</html>
