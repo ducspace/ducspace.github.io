@@ -1,13 +1,14 @@
 ---
 import Base from '../layouts/Base.astro';
 
-// Sample photos data — replace with real photos later
-const photos = [
-  { src: '/photos/placeholder.svg', caption: 'Hà Nội, 6 giờ sáng. Lúc này thành phố còn sống được.', date: '2026-01-15', alt: 'Hà Nội sáng sớm' },
-  { src: '/photos/placeholder.svg', caption: 'Sáng thứ Hai. Cà phê nguội hết rồi mà vẫn chưa mở máy.', date: '2026-03-04', alt: 'Cà phê buổi sáng' },
-  { src: '/photos/placeholder.svg', caption: 'Một chiều mưa ở Hà Nội. Ngồi trong quán nhìn ra đường.', date: '2026-04-20', alt: 'Hà Nội mưa' },
-  { src: '/photos/placeholder.svg', caption: 'Góc làm việc quen thuộc. Đôi khi cũng cần thay đổi.', date: '2026-05-10', alt: 'Góc làm việc' },
-];
+import photosRaw from '../data/photos.json';
+
+const photos = photosRaw.map((p: any) => ({
+  src: p.src,
+  caption: p.caption,
+  date: p.date,
+  alt: p.alt || p.caption,
+}));
 
 // Group by year
 const byYear: Record<number, typeof photos> = {};
