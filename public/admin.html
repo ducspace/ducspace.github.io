@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ducspace Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --accent:      #C05E20;
+    --accent-light:#FAECE7;
+    --bg:          #FDFAF5;
+    --sidebar-bg:  #F5F0E8;
+    --border:      #E0D9CE;
+    --text:        #1a1a18;
+    --text-sub:    #2c2c2a;
+    --text-muted:  #888;
+    --radius-sm:   8px;
+    --radius-md:   12px;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 16px 60px;
+  }
+
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  @keyframes spin   { to { transform: rotate(360deg); } }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+  /* ── Logo ── */
+  .logo-wrap {
+    display: flex; align-items: baseline; gap: 0;
+    padding: 32px 0 24px;
+  }
+  .logo-duc   { font-family: 'Source Serif 4', serif; font-weight: 600; font-size: 20px; color: var(--text); }
+  .logo-cur   { display: inline-block; width: 2px; height: 18px; background: var(--accent);
+                margin: 0 1px; vertical-align: middle; animation: blink 1.1s step-end infinite; }
+  .logo-space { font-family: 'DM Sans', sans-serif; font-weight: 300; font-size: 20px; color: var(--text-muted); }
+  .logo-admin { font-size: 12px; color: var(--text-muted); margin-left: 10px; }
+
+  /* ══════════════════════════════════════
+     LOGIN SCREEN
+  ══════════════════════════════════════ */
+  #login-screen {
+    width: 100%; max-width: 360px;
+    animation: fadeIn 0.3s ease;
+  }
+  .login-card {
+    background: #fff;
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 28px 24px;
+    text-align: center;
+  }
+  .login-card h2 {
+    font-family: 'Source Serif 4', serif;
+    font-size: 18px; font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .login-card p {
+    font-size: 13px; color: var(--text-muted);
+    margin-bottom: 24px;
+  }
+  .login-field {
+    position: relative; margin-bottom: 12px;
+  }
+  .login-field input {
+    width: 100%; font-family: 'DM Sans', sans-serif; font-size: 14px;
+    border: 0.5px solid var(--border); border-radius: var(--radius-sm);
+    padding: 11px 40px 11px 14px; background: var(--bg); color: var(--text);
+    outline: none; transition: border-color 0.15s; letter-spacing: 0.05em;
+  }
+  .login-field input:focus { border-color: var(--accent); }
+  .login-field input.err   { border-color: #e53935; }
+  .toggle-pw {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer;
+    font-size: 15px; color: var(--text-muted); padding: 0;
+    line-height: 1;
+  }
+  .btn-login {
+    width: 100%; font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 500;
+    background: var(--accent); color: #fff; border: none;
+    border-radius: var(--radius-sm); padding: 11px; cursor: pointer;
+    transition: opacity 0.15s; margin-top: 4px;
+  }
+  .btn-login:hover { opacity: 0.88; }
+  .login-err {
+    font-size: 12px; color: #e53935;
+    margin-top: 10px; min-height: 18px;
+  }
+
+  /* ══════════════════════════════════════
+     MAIN APP
+  ══════════════════════════════════════ */
+  #app { display: none; width: 100%; max-width: 680px; animation: fadeIn 0.3s ease; }
+
+  header {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    width: 100%; padding-bottom: 20px;
+  }
+  .btn-logout {
+    font-size: 12px; color: var(--text-muted);
+    background: none; border: 0.5px solid var(--border);
+    border-radius: 20px; padding: 4px 12px; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-logout:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── Auth banner ── */
+  #auth-bar {
+    background: var(--sidebar-bg);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 14px 18px;
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 28px;
+  }
+  #auth-bar input {
+    flex: 1; font-family: 'DM Sans', sans-serif; font-size: 13px;
+    border: 0.5px solid var(--border); border-radius: var(--radius-sm);
+    padding: 8px 12px; background: var(--bg); color: var(--text); outline: none;
+  }
+  #auth-bar input:focus { border-color: var(--accent); }
+  #auth-bar button {
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+    background: var(--accent); color: #fff; border: none;
+    border-radius: var(--radius-sm); padding: 8px 16px; cursor: pointer;
+    white-space: nowrap;
+  }
+  #auth-status { font-size: 12px; color: var(--text-muted); }
+  .dot-ok  { color: #4caf50; }
+  .dot-err { color: #e53935; }
+
+  /* ── Tabs ── */
+  .tabs { display: flex; gap: 4px; margin-bottom: 20px; }
+  .tab-btn {
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+    padding: 7px 16px; border-radius: 20px; border: 0.5px solid var(--border);
+    background: transparent; color: var(--text-muted); cursor: pointer;
+    transition: all 0.15s;
+  }
+  .tab-btn:hover  { border-color: var(--accent); color: var(--accent); }
+  .tab-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* ── Card ── */
+  .card { background: #fff; border: 0.5px solid var(--border);
+          border-radius: var(--radius-md); padding: 24px; display: none; }
+  .card.active { display: block; }
+
+  /* ── Form ── */
+  label {
+    display: block; font-size: 11px; font-weight: 500;
+    color: var(--text-muted); letter-spacing: 0.06em;
+    text-transform: uppercase; margin-bottom: 6px;
+  }
+  input[type=text], input[type=date], select, textarea {
+    width: 100%; font-family: 'DM Sans', sans-serif; font-size: 14px;
+    border: 0.5px solid var(--border); border-radius: var(--radius-sm);
+    padding: 10px 12px; background: var(--bg); color: var(--text);
+    outline: none; margin-bottom: 16px; transition: border-color 0.15s;
+  }
+  input[type=text]:focus, input[type=date]:focus,
+  select:focus, textarea:focus { border-color: var(--accent); }
+  textarea { resize: vertical; line-height: 1.7; min-height: 220px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  /* ── Tags ── */
+  .tags-wrap {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    border: 0.5px solid var(--border); border-radius: var(--radius-sm);
+    padding: 8px 10px; background: var(--bg); margin-bottom: 16px; cursor: text;
+  }
+  .tags-wrap:focus-within { border-color: var(--accent); }
+  .tag-pill {
+    background: var(--accent-light); color: #993C1D;
+    font-size: 11px; font-weight: 500; padding: 3px 8px;
+    border-radius: 10px; display: flex; align-items: center; gap: 4px;
+  }
+  .tag-pill button {
+    background: none; border: none; cursor: pointer;
+    color: #993C1D; font-size: 13px; line-height: 1; padding: 0;
+  }
+  #tag-input {
+    border: none; outline: none; background: transparent;
+    font-family: 'DM Sans', sans-serif; font-size: 13px;
+    color: var(--text); flex: 1; min-width: 80px;
+    margin: 0; padding: 2px 0;
+  }
+
+  /* ── Upload zone ── */
+  .upload-zone {
+    border: 1.5px dashed var(--border); border-radius: var(--radius-md);
+    padding: 28px; text-align: center; cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    margin-bottom: 16px; position: relative;
+  }
+  .upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: var(--accent-light); }
+  .upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .upload-zone p { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+  .upload-zone span { color: var(--accent); font-weight: 500; }
+
+  .img-preview-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px;
+  }
+  .img-thumb {
+    aspect-ratio: 1/1; border-radius: var(--radius-sm);
+    overflow: hidden; position: relative; background: var(--sidebar-bg);
+  }
+  .img-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .img-thumb button {
+    position: absolute; top: 4px; right: 4px;
+    background: rgba(26,26,24,0.6); color: #fff;
+    border: none; border-radius: 50%; width: 20px; height: 20px;
+    font-size: 12px; cursor: pointer; display: flex;
+    align-items: center; justify-content: center;
+  }
+
+  /* ── Misc ── */
+  hr { border: none; border-top: 0.5px solid var(--border); margin: 20px 0; }
+  .preview-box {
+    background: var(--sidebar-bg); border-radius: var(--radius-sm);
+    padding: 14px 16px; margin-bottom: 20px;
+    font-size: 12px; color: var(--text-muted); line-height: 1.7;
+    font-family: 'Courier New', monospace;
+    white-space: pre-wrap; word-break: break-all;
+    max-height: 200px; overflow-y: auto; display: none;
+  }
+  .actions {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap;
+  }
+  .btn-preview {
+    font-family: 'DM Sans', sans-serif; font-size: 13px;
+    background: none; border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm); padding: 9px 16px;
+    color: var(--text-muted); cursor: pointer; transition: all 0.15s;
+  }
+  .btn-preview:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-publish {
+    font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+    background: var(--accent); color: #fff; border: none;
+    border-radius: var(--radius-sm); padding: 10px 28px; cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .btn-publish:hover    { opacity: 0.88; }
+  .btn-publish:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ── Toast ── */
+  #toast {
+    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+    background: var(--text); color: #fff; font-size: 13px;
+    padding: 10px 20px; border-radius: 20px;
+    opacity: 0; transition: opacity 0.25s; pointer-events: none; white-space: nowrap;
+  }
+  #toast.show { opacity: 1; }
+  #toast.err  { background: #c62828; }
+  #toast.ok   { background: #2e7d32; }
+
+  .spinner {
+    display: inline-block; width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff;
+    border-radius: 50%; animation: spin 0.7s linear infinite;
+    margin-right: 6px; vertical-align: middle;
+  }
+
+  @media (max-width: 600px) {
+    .field-row { grid-template-columns: 1fr; }
+    .img-preview-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- Logo (always visible) -->
+<div class="logo-wrap">
+  <span class="logo-duc">Duc</span><span class="logo-cur"></span><span class="logo-space">space</span>
+  <span class="logo-admin">/ admin</span>
+</div>
+
+<!-- ══════════ LOGIN SCREEN ══════════ -->
+<div id="login-screen">
+  <div class="login-card">
+    <h2>Đăng nhập</h2>
+    <p>Nhập password để vào trang quản lý</p>
+    <div class="login-field">
+      <input type="password" id="pw-input" placeholder="Password"
+             onkeydown="if(event.key==='Enter') doLogin()" />
+      <button class="toggle-pw" onclick="togglePw()" title="Hiện/ẩn">👁</button>
+    </div>
+    <button class="btn-login" onclick="doLogin()">Vào</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- ══════════ MAIN APP ══════════ -->
+<div id="app">
+
+  <header>
+    <div></div>
+    <button class="btn-logout" onclick="doLogout()">Đăng xuất</button>
+  </header>
+
+  <!-- GitHub Token -->
+  <div id="auth-bar">
+    <input type="password" id="token-input" placeholder="GitHub Personal Access Token (ghp_...)" autocomplete="off" />
+    <button onclick="saveToken()">Lưu</button>
+    <span id="auth-status">─</span>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('notes',this)">📝 Bài viết</button>
+    <button class="tab-btn" onclick="switchTab('photos',this)">📷 Ảnh</button>
+    <button class="tab-btn" onclick="switchTab('bookmarks',this)">🔖 Bookmark</button>
+  </div>
+
+  <!-- NOTES -->
+  <div class="card active" id="tab-notes">
+    <label>Tiêu đề</label>
+    <input type="text" id="n-title" placeholder="Ví dụ: Khi AI làm thay mọi thứ trừ việc suy nghĩ" />
+
+    <label>Nội dung</label>
+    <textarea id="n-body" placeholder="Viết tự nhiên như đang kể chuyện..."></textarea>
+
+    <div class="field-row">
+      <div>
+        <label>Ngày đăng</label>
+        <input type="date" id="n-date" />
+      </div>
+      <div>
+        <label>Loại bài</label>
+        <select id="n-type">
+          <option value="note">note</option>
+          <option value="essay">essay</option>
+        </select>
+      </div>
+    </div>
+
+    <label>Tags (Enter để thêm)</label>
+    <div class="tags-wrap" id="n-tags-wrap" onclick="document.getElementById('tag-input').focus()">
+      <input id="tag-input" placeholder="aftersales, ai, life..." />
+    </div>
+
+    <label>Ảnh đính kèm (tuỳ chọn)</label>
+    <div class="upload-zone" id="n-drop">
+      <input type="file" id="n-imgs" accept="image/*" multiple onchange="handleImgs(this.files,'notes')" />
+      <p>Kéo thả ảnh vào đây<br/><span>hoặc bấm để chọn file</span></p>
+    </div>
+    <div class="img-preview-grid" id="n-preview-grid"></div>
+
+    <hr />
+    <div class="preview-box" id="n-preview-box"></div>
+    <div class="actions">
+      <button class="btn-preview" onclick="togglePreview('notes')">Xem file .md</button>
+      <button class="btn-publish" id="n-publish-btn" onclick="publish('notes')">Đăng bài</button>
+    </div>
+  </div>
+
+  <!-- PHOTOS -->
+  <div class="card" id="tab-photos">
+    <label>Ảnh (có thể chọn nhiều)</label>
+    <div class="upload-zone" id="p-drop">
+      <input type="file" id="p-imgs" accept="image/*" multiple onchange="handleImgs(this.files,'photos')" />
+      <p>Kéo thả ảnh vào đây<br/><span>hoặc bấm để chọn file</span></p>
+    </div>
+    <div class="img-preview-grid" id="p-preview-grid"></div>
+
+    <label>Caption</label>
+    <textarea id="p-caption" placeholder="Hà Nội, 6 giờ sáng. Lúc này thành phố còn sống được." style="min-height:80px"></textarea>
+
+    <div class="field-row">
+      <div>
+        <label>Ngày chụp</label>
+        <input type="date" id="p-date" />
+      </div>
+      <div>
+        <label>Tags</label>
+        <input type="text" id="p-tags" placeholder="photography, life" />
+      </div>
+    </div>
+
+    <hr />
+    <div class="actions">
+      <span style="font-size:12px;color:var(--text-muted)">Lưu vào <code>public/photos/</code></span>
+      <button class="btn-publish" id="p-publish-btn" onclick="publish('photos')">Upload ảnh</button>
+    </div>
+  </div>
+
+  <!-- BOOKMARKS -->
+  <div class="card" id="tab-bookmarks">
+    <label>URL</label>
+    <input type="text" id="bm-url" placeholder="https://..." />
+
+    <label>Tiêu đề bài</label>
+    <input type="text" id="bm-title" placeholder="Tên bài viết hoặc link" />
+
+    <label>Nhận xét ngắn</label>
+    <textarea id="bm-note" placeholder="1–2 câu tại sao link này đáng đọc..." style="min-height:80px;font-style:italic"></textarea>
+
+    <div class="field-row">
+      <div>
+        <label>Ngày lưu</label>
+        <input type="date" id="bm-date" />
+      </div>
+      <div>
+        <label>Read time (phút)</label>
+        <input type="text" id="bm-readtime" placeholder="5" />
+      </div>
+    </div>
+
+    <label>Tags</label>
+    <input type="text" id="bm-tags" placeholder="aftersales, ai, productivity" />
+
+    <hr />
+    <div class="preview-box" id="bm-preview-box"></div>
+    <div class="actions">
+      <button class="btn-preview" onclick="togglePreview('bookmarks')">Xem YAML entry</button>
+      <button class="btn-publish" id="bm-publish-btn" onclick="publish('bookmarks')">Lưu bookmark</button>
+    </div>
+  </div>
+
+</div><!-- /#app -->
+
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════
+// CONFIG — đổi password ở đây
+// ══════════════════════════════════════
+const ADMIN_PASSWORD = 'ducspace2026';   // ← anh đổi thành password muốn dùng
+
+const OWNER  = 'ducspace';
+const REPO   = 'ducspace.github.io';
+const BRANCH = 'main';
+const API    = 'https://api.github.com';
+const SESSION_KEY = 'ds_authed';
+
+// ══════════════════════════════════════
+// LOGIN
+// ══════════════════════════════════════
+function doLogin() {
+  const pw = document.getElementById('pw-input').value;
+  if (pw === ADMIN_PASSWORD) {
+    sessionStorage.setItem(SESSION_KEY, '1');
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    initApp();
+  } else {
+    const input = document.getElementById('pw-input');
+    const err   = document.getElementById('login-err');
+    input.classList.add('err');
+    err.textContent = 'Sai password, thử lại.';
+    input.value = '';
+    setTimeout(() => { input.classList.remove('err'); err.textContent = ''; }, 2500);
+  }
+}
+
+function doLogout() {
+  sessionStorage.removeItem(SESSION_KEY);
+  location.reload();
+}
+
+function togglePw() {
+  const inp = document.getElementById('pw-input');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+// Check session on load
+if (sessionStorage.getItem(SESSION_KEY)) {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  initApp();
+}
+
+// ══════════════════════════════════════
+// APP INIT
+// ══════════════════════════════════════
+let TOKEN = '';
+
+function initApp() {
+  TOKEN = localStorage.getItem('ds_token') || '';
+  if (TOKEN) {
+    document.getElementById('token-input').value = '••••••••••••••••';
+    verifyToken();
+  }
+  // Set today as default dates
+  const today = new Date().toISOString().slice(0,10);
+  ['n-date','p-date','bm-date'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = today;
+  });
+  // Tag input listener
+  document.getElementById('tag-input').addEventListener('keydown', tagKeydown);
+  // Drag zones
+  setupDrop('n-drop', 'notes');
+  setupDrop('p-drop', 'photos');
+}
+
+// ══════════════════════════════════════
+// TOKEN
+// ══════════════════════════════════════
+function saveToken() {
+  const val = document.getElementById('token-input').value.trim();
+  if (!val || val.startsWith('•')) return toast('Nhập token mới vào', 'err');
+  TOKEN = val;
+  localStorage.setItem('ds_token', val);
+  verifyToken();
+}
+
+async function verifyToken() {
+  const el = document.getElementById('auth-status');
+  el.innerHTML = 'Đang kiểm tra...';
+  try {
+    const r = await ghFetch(`/repos/${OWNER}/${REPO}`, 'GET');
+    if (r.ok) {
+      el.innerHTML = '<span class="dot-ok">●</span> Đã kết nối';
+      document.getElementById('token-input').value = '••••••••••••••••';
+    } else {
+      el.innerHTML = '<span class="dot-err">●</span> Token không hợp lệ';
+    }
+  } catch { el.innerHTML = '<span class="dot-err">●</span> Lỗi kết nối'; }
+}
+
+// ══════════════════════════════════════
+// TABS
+// ══════════════════════════════════════
+function switchTab(name, btn) {
+  document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ══════════════════════════════════════
+// TAGS
+// ══════════════════════════════════════
+let tags = [];
+
+function tagKeydown(e) {
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+    const val = e.target.value.trim().replace(/,$/, '');
+    if (val && !tags.includes(val)) { tags.push(val); renderTags(); }
+    e.target.value = '';
+  }
+  if (e.key === 'Backspace' && !e.target.value && tags.length) {
+    tags.pop(); renderTags();
+  }
+}
+
+function removeTag(val) { tags = tags.filter(t => t !== val); renderTags(); }
+
+function renderTags() {
+  const wrap = document.getElementById('n-tags-wrap');
+  wrap.querySelectorAll('.tag-pill').forEach(el => el.remove());
+  const input = document.getElementById('tag-input');
+  tags.forEach(t => {
+    const pill = document.createElement('span');
+    pill.className = 'tag-pill';
+    pill.innerHTML = `${t}<button onclick="removeTag('${t}')">×</button>`;
+    wrap.insertBefore(pill, input);
+  });
+}
+
+// ══════════════════════════════════════
+// IMAGES
+// ══════════════════════════════════════
+let imageFiles = { notes: [], photos: [] };
+
+function setupDrop(id, tab) {
+  const zone = document.getElementById(id);
+  if (!zone) return;
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.classList.remove('drag');
+    handleImgs(e.dataTransfer.files, tab);
+  });
+}
+
+function handleImgs(files, tab) {
+  imageFiles[tab].push(...Array.from(files));
+  renderPreviews(tab);
+}
+
+function renderPreviews(tab) {
+  const grid = document.getElementById(tab === 'notes' ? 'n-preview-grid' : 'p-preview-grid');
+  grid.innerHTML = '';
+  imageFiles[tab].forEach((f, i) => {
+    const url = URL.createObjectURL(f);
+    const div = document.createElement('div');
+    div.className = 'img-thumb';
+    div.innerHTML = `<img src="${url}" /><button onclick="removeImg('${tab}',${i})">×</button>`;
+    grid.appendChild(div);
+  });
+}
+
+function removeImg(tab, idx) { imageFiles[tab].splice(idx, 1); renderPreviews(tab); }
+
+// ══════════════════════════════════════
+// GITHUB API
+// ══════════════════════════════════════
+function ghFetch(path, method, body) {
+  return fetch(API + path, {
+    method,
+    headers: {
+      'Authorization': `Bearer ${TOKEN}`,
+      'Content-Type': 'application/json',
+      'Accept': 'application/vnd.github+json',
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+}
+
+async function getFileSHA(path) {
+  const r = await ghFetch(`/repos/${OWNER}/${REPO}/contents/${path}`, 'GET');
+  if (!r.ok) return null;
+  const d = await r.json();
+  return { sha: d.sha, content: atob(d.content.replace(/\n/g,'')) };
+}
+
+async function putFile(path, content, message, sha) {
+  const encoded = btoa(unescape(encodeURIComponent(content)));
+  const body = { message, content: encoded, branch: BRANCH };
+  if (sha) body.sha = sha;
+  const r = await ghFetch(`/repos/${OWNER}/${REPO}/contents/${path}`, 'PUT', body);
+  if (!r.ok) { const e = await r.json(); throw new Error(e.message); }
+  return r.json();
+}
+
+async function putBinaryFile(path, arrayBuffer, message, sha) {
+  const bytes = new Uint8Array(arrayBuffer);
+  let binary = '';
+  bytes.forEach(b => binary += String.fromCharCode(b));
+  const body = { message, content: btoa(binary), branch: BRANCH };
+  if (sha) body.sha = sha;
+  const r = await ghFetch(`/repos/${OWNER}/${REPO}/contents/${path}`, 'PUT', body);
+  if (!r.ok) { const e = await r.json(); throw new Error(e.message); }
+  return r.json();
+}
+
+// ══════════════════════════════════════
+// BUILD CONTENT
+// ══════════════════════════════════════
+function buildNotesMd() {
+  const title   = document.getElementById('n-title').value.trim();
+  const body    = document.getElementById('n-body').value.trim();
+  const date    = document.getElementById('n-date').value;
+  const type    = document.getElementById('n-type').value;
+  const tagList = tags.length ? JSON.stringify(tags) : '[]';
+  let imgMd = '';
+  if (imageFiles.notes.length) {
+    imgMd = '\n\n' + imageFiles.notes.map(f => {
+      const slug = f.name.toLowerCase().replace(/\s+/g,'-');
+      return `![${f.name}](/images/${slug})`;
+    }).join('\n');
+  }
+  return `---\ntitle: ${title}\ndate: ${date}\ntags: ${tagList}\ntype: ${type}\n---\n\n${body}${imgMd}\n`;
+}
+
+function buildBookmarkYaml(existing) {
+  const url      = document.getElementById('bm-url').value.trim();
+  const title    = document.getElementById('bm-title').value.trim();
+  const note     = document.getElementById('bm-note').value.trim();
+  const date     = document.getElementById('bm-date').value;
+  const readtime = document.getElementById('bm-readtime').value.trim();
+  const tagsRaw  = document.getElementById('bm-tags').value.trim();
+  const tagArr   = tagsRaw.split(',').map(t=>t.trim()).filter(Boolean);
+  const entry = `\n- title: ${title}\n  url: ${url}\n  note: ${note}\n  tags: [${tagArr.join(', ')}]\n  date: ${date}${readtime ? '\n  readtime: ' + readtime : ''}`;
+  return existing ? existing + entry : entry.trimStart();
+}
+
+function togglePreview(tab) {
+  if (tab === 'notes') {
+    const box = document.getElementById('n-preview-box');
+    box.style.display = box.style.display === 'block' ? 'none' : 'block';
+    if (box.style.display === 'block') box.textContent = buildNotesMd();
+  } else {
+    const box = document.getElementById('bm-preview-box');
+    box.style.display = box.style.display === 'block' ? 'none' : 'block';
+    if (box.style.display === 'block') box.textContent = buildBookmarkYaml('# existing...');
+  }
+}
+
+function toSlug(str) {
+  return str.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/đ/g,'d').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+}
+
+// ══════════════════════════════════════
+// PUBLISH
+// ══════════════════════════════════════
+async function publish(tab) {
+  if (!TOKEN) return toast('Chưa có GitHub token', 'err');
+  const btnId = tab === 'notes' ? 'n-publish-btn' : tab === 'photos' ? 'p-publish-btn' : 'bm-publish-btn';
+  const btn = document.getElementById(btnId);
+  const label = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Đang xử lý...';
+  try {
+    if (tab === 'notes')     await publishNote();
+    else if (tab === 'photos')    await publishPhotos();
+    else                          await publishBookmark();
+  } catch(e) {
+    toast('Lỗi: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false; btn.innerHTML = label;
+  }
+}
+
+async function publishNote() {
+  const title = document.getElementById('n-title').value.trim();
+  const body  = document.getElementById('n-body').value.trim();
+  const date  = document.getElementById('n-date').value;
+  if (!title) return toast('Chưa có tiêu đề', 'err');
+  if (!body)  return toast('Chưa có nội dung', 'err');
+  for (const f of imageFiles.notes) {
+    const slug = f.name.toLowerCase().replace(/\s+/g,'-');
+    const buf  = await f.arrayBuffer();
+    const ex   = await getFileSHA(`public/images/${slug}`);
+    await putBinaryFile(`public/images/${slug}`, buf, `upload image: ${slug}`, ex?.sha);
+  }
+  const slug = toSlug(title) || date;
+  const path = `src/content/notes/${date}-${slug}.md`;
+  const ex   = await getFileSHA(path);
+  await putFile(path, buildNotesMd(), `add note: ${title}`, ex?.sha);
+  toast('✓ Bài đã đăng! Site cập nhật sau ~1 phút', 'ok');
+  document.getElementById('n-title').value = '';
+  document.getElementById('n-body').value  = '';
+  tags = []; renderTags();
+  imageFiles.notes = []; renderPreviews('notes');
+}
+
+async function publishPhotos() {
+  const files = imageFiles.photos;
+  if (!files.length) return toast('Chưa chọn ảnh', 'err');
+  const caption = document.getElementById('p-caption').value.trim();
+  const date    = document.getElementById('p-date').value;
+  const year    = date.slice(0,4);
+  const entries = [];
+  for (const f of files) {
+    const slug = f.name.toLowerCase().replace(/\s+/g,'-');
+    const buf  = await f.arrayBuffer();
+    const ex   = await getFileSHA(`public/photos/${year}/${slug}`);
+    await putBinaryFile(`public/photos/${year}/${slug}`, buf, `upload photo: ${slug}`, ex?.sha);
+    entries.push(`- src: /photos/${year}/${slug}\n  caption: ${caption || f.name}\n  date: ${date}`);
+  }
+  const yamlPath = 'src/data/photos.yaml';
+  const ex = await getFileSHA(yamlPath);
+  await putFile(yamlPath, (ex?.content || '') + '\n' + entries.join('\n'), `add ${files.length} photo(s)`, ex?.sha);
+  toast(`✓ Đã upload ${files.length} ảnh!`, 'ok');
+  imageFiles.photos = []; renderPreviews('photos');
+  document.getElementById('p-caption').value = '';
+}
+
+async function publishBookmark() {
+  const url   = document.getElementById('bm-url').value.trim();
+  const title = document.getElementById('bm-title').value.trim();
+  if (!url)   return toast('Chưa có URL', 'err');
+  if (!title) return toast('Chưa có tiêu đề', 'err');
+  const yamlPath = 'src/data/bookmarks.yaml';
+  const ex = await getFileSHA(yamlPath);
+  await putFile(yamlPath, buildBookmarkYaml(ex?.content || ''), `add bookmark: ${title}`, ex?.sha);
+  toast('✓ Bookmark đã lưu!', 'ok');
+  ['bm-url','bm-title','bm-note','bm-readtime','bm-tags'].forEach(id => document.getElementById(id).value = '');
+}
+
+// ══════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════
+function toast(msg, type='ok') {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'show ' + type;
+  setTimeout(() => { el.className = ''; }, 3500);
+}
+
+document.addEventListener('dragover', e => e.preventDefault());
+</script>
+</body>
+</html>
