@@ -24,7 +24,7 @@ function formatDate(d: Date) {
         const tags = note.data.tags ?? [];
         return (
           <li>
-            <a href={`/notes/${note.slug}`} class="note-row">
+            <a href={`/notes/${note.id}`} class="note-row">h
               <div>
                 <div class="note-title">{note.data.title}</div>
                 {note.data.description && <div class="note-desc">{note.data.description}</div>}
